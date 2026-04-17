@@ -337,6 +337,6 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 Frog2/Assets/Tilemap/Level Palette.prefab.meta
-*.json
+# *.json
 /Frog2/Assets/Saves
 *.idea/

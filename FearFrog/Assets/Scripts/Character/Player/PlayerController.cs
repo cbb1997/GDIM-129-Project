@@ -65,7 +65,6 @@ public class PlayerController : MonoBehaviour
         m_rb.AddForce(moveDirection * m_moveSpeed, ForceMode.Force);
 
         Vector3 currHorVelocity = m_rb.linearVelocity;
-        currHorVelocity.y = 0f;
         Debug.Log(currHorVelocity.magnitude);
     }
 
@@ -74,12 +73,12 @@ public class PlayerController : MonoBehaviour
     {
         // Player Velocity Control
         Vector3 currHorVelocity = m_rb.linearVelocity;
-        currHorVelocity.y = 0f;
+        // currHorVelocity.y = 0f;
         
         if (currHorVelocity.magnitude > m_maxVelocity)
         {
             currHorVelocity = currHorVelocity.normalized * m_maxVelocity;
-            currHorVelocity.y = m_rb.linearVelocity.y;
+            // currHorVelocity.y = m_rb.linearVelocity.y;
             m_rb.linearVelocity = currHorVelocity;
         }
     }

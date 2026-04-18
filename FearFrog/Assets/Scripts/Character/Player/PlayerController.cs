@@ -11,6 +11,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float m_jumpForce = 5f;
     [SerializeField] private float m_groundDrag = 5f;
     [SerializeField] private float m_airDrag = 0f;
+    private float m_gcRadius = 0.2f;    // Grounndeed Check Shpere radius
     
     private uint m_health = 0; // To be set later with scriptable objects
     private bool m_isGrounded = true;
@@ -45,7 +46,8 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         // Player Grounded Check
-        m_isGrounded = Physics.Raycast(m_footPos.position, Vector3.down, 0.15f, LayerMask.GetMask("Ground"));
+        RaycastHit hit;
+        m_isGrounded = Physics.SphereCast(transform.position, m_gcRadius, -transform.up, out hit, -m_footPos.localPosition.y);
         m_rb.linearDamping = m_isGrounded ? m_groundDrag : m_airDrag;
         
         // Player Look

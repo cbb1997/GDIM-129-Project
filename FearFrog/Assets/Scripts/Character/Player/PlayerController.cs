@@ -6,7 +6,7 @@ public class PlayerController : MonoBehaviour
 {
     // Member Variables
     [SerializeField] private float m_moveSpeed = 35f;
-    [SerializeField] private float m_maxVelocity = 10f;
+    [SerializeField] private float m_maxVelocity = 6f;
     [SerializeField] private float m_cameraSensitivity = 100f;
     [SerializeField] private float m_jumpForce = 5f;
     [SerializeField] private float m_groundDrag = 5f;
@@ -65,24 +65,15 @@ public class PlayerController : MonoBehaviour
         Vector2 input = InputController.Instance.Input.Player.Move.ReadValue<Vector2>();
         Vector3 moveDirection = new Vector3(input.x, 0, input.y);
         moveDirection = (Quaternion.Euler(0f, m_xOritation, 0f) * moveDirection).normalized;
-
         m_rb.AddForce(moveDirection * m_moveSpeed * Time.fixedDeltaTime, ForceMode.VelocityChange);
-        
-        Vector3 currVelocity = m_rb.linearVelocity;
-        currVelocity.y = 0f;
-        if (currVelocity.magnitude > 1.5f)
-            Debugger.Log(currVelocity.magnitude.ToString());
         
         // Player Velocity Control
         Vector3 currHorVelocity = m_rb.linearVelocity;
-        // float currDownSpeed = currHorVelocity.y;
         currHorVelocity.y = 0f;
-        
         if (currHorVelocity.magnitude > m_maxVelocity)
         {
             currHorVelocity = currHorVelocity.normalized * m_maxVelocity;
             // Player's fall down speed should not be affected by velocity control
-            // currHorVelocity.y = currDownSpeed;
             currHorVelocity.y = m_rb.linearVelocity.y;
             m_rb.linearVelocity = currHorVelocity;
         }

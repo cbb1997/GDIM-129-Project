@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     // Member Variables
-    [SerializeField] private float m_moveSpeed = 35f;
+    [SerializeField] private float m_moveAcceleration = 35f;
     [SerializeField] private float m_maxVelocity = 6f;
     [SerializeField] private float m_cameraSensitivity = 100f;
     [SerializeField] private float m_jumpForce = 5f;
@@ -46,8 +46,8 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         // Player Grounded Check
-        RaycastHit hit;
-        m_isGrounded = Physics.SphereCast(transform.position, m_gcRadius, -transform.up, out hit, -m_footPos.localPosition.y);
+        Ray detectionRay = new Ray(transform.position, -transform.up);
+        m_isGrounded = Physics.SphereCast(detectionRay, m_gcRadius, -m_footPos.localPosition.y);
         m_rb.linearDamping = m_isGrounded ? m_groundDrag : m_airDrag;
         
         // Player Look
@@ -67,7 +67,7 @@ public class PlayerController : MonoBehaviour
         Vector2 input = InputController.Instance.Input.Player.Move.ReadValue<Vector2>();
         Vector3 moveDirection = new Vector3(input.x, 0, input.y);
         moveDirection = (Quaternion.Euler(0f, m_xOritation, 0f) * moveDirection).normalized;
-        m_rb.AddForce(moveDirection * m_moveSpeed * Time.fixedDeltaTime, ForceMode.VelocityChange);
+        m_rb.AddForce(moveDirection * m_moveAcceleration, ForceMode.Acceleration);
         
         // Player Velocity Control
         Vector3 currHorVelocity = m_rb.linearVelocity;
@@ -79,18 +79,25 @@ public class PlayerController : MonoBehaviour
             currHorVelocity.y = m_rb.linearVelocity.y;
             m_rb.linearVelocity = currHorVelocity;
         }
+        
+        // Experiment for anti sliding on slides
+        // Physics.Raycast(transform.position, Vector3.down, out RaycastHit hitInfo, Mathf.Infinity);
+        // float cos = Vector3.Dot(-hitInfo.normal, Vector3.down);
+        // float gravityForceMag = m_rb.mass * Physics.gravity.y;
+        // Vector3 gravityForce = new Vector3(0f, -gravityForceMag, 0f);
+        // Vector3 gravityNormal = (cos * gravityForceMag) * (-hitInfo.normal);
+        // Debugger.Log((gravityForce - gravityNormal).ToString());
+        // m_rb.AddForce((gravityForce - gravityNormal), ForceMode.Acceleration);
     }
     
     
     // Player Jump
     private void Jump(InputAction.CallbackContext ctx)
     {
+        // Perform Jump is player is grounded
         if (m_isGrounded)
         {
-            // Update player rigidbody velocity
             m_rb.AddForce(new Vector3(0f, m_jumpForce, 0f), ForceMode.VelocityChange);
-            
-            // Update player grounded state
             m_isGrounded = false;
         }
     }

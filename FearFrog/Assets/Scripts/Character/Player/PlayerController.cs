@@ -11,7 +11,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float m_jumpForce = 5f;
     [SerializeField] private float m_groundDrag = 5f;
     [SerializeField] private float m_airDrag = 0f;
-    private float m_gcRadius = 0.2f;    // Grounndeed Check Shpere radius
+    private float m_gcRadius = 0.35f;    // Grounndeed Check Shpere radius
     
     private uint m_health = 0; // To be set later with scriptable objects
     private bool m_isGrounded = true;
@@ -45,11 +45,6 @@ public class PlayerController : MonoBehaviour
     // Update
     void Update()
     {
-        // Player Grounded Check
-        Ray detectionRay = new Ray(transform.position, -transform.up);
-        m_isGrounded = Physics.SphereCast(detectionRay, m_gcRadius, -m_footPos.localPosition.y);
-        m_rb.linearDamping = m_isGrounded ? m_groundDrag : m_airDrag;
-        
         // Player Look
         Vector2 lookDirection = InputController.Instance.Input.Player.Look.ReadValue<Vector2>();
         m_xOritation += lookDirection.x * m_cameraSensitivity * Time.deltaTime;
@@ -63,10 +58,19 @@ public class PlayerController : MonoBehaviour
     // Fixed Update
     void FixedUpdate()
     {
+        // Player Grounded Check
+        RaycastHit hitInfo;
+        m_isGrounded = Physics.SphereCast(transform.position, m_gcRadius, Vector3.down, out hitInfo, -m_footPos.localPosition.y);
+        m_rb.linearDamping = m_isGrounded ? m_groundDrag : m_airDrag;
+        
         // Player Move
         Vector2 input = InputController.Instance.Input.Player.Move.ReadValue<Vector2>();
         Vector3 moveDirection = new Vector3(input.x, 0, input.y);
         moveDirection = (Quaternion.Euler(0f, m_xOritation, 0f) * moveDirection).normalized;
+        
+        
+        
+        
         m_rb.AddForce(moveDirection * m_moveAcceleration, ForceMode.Acceleration);
         
         // Player Velocity Control
@@ -81,13 +85,16 @@ public class PlayerController : MonoBehaviour
         }
         
         // Experiment for anti sliding on slides
-        // Physics.Raycast(transform.position, Vector3.down, out RaycastHit hitInfo, Mathf.Infinity);
-        // float cos = Vector3.Dot(-hitInfo.normal, Vector3.down);
-        // float gravityForceMag = m_rb.mass * Physics.gravity.y;
-        // Vector3 gravityForce = new Vector3(0f, -gravityForceMag, 0f);
-        // Vector3 gravityNormal = (cos * gravityForceMag) * (-hitInfo.normal);
-        // Debugger.Log((gravityForce - gravityNormal).ToString());
-        // m_rb.AddForce((gravityForce - gravityNormal), ForceMode.Acceleration);
+        if (m_isGrounded)
+        {
+            Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, Mathf.Infinity);
+            float cos = Vector3.Dot(-hit.normal, Vector3.down);
+            float gravityForceMag = m_rb.mass * Physics.gravity.y;
+            Vector3 gravityForce = new Vector3(0f, -gravityForceMag, 0f);
+            Vector3 gravityNormal = (cos * gravityForceMag) * (-hit.normal);
+            // Debugger.Log((gravityForce - gravityNormal).ToString());
+            m_rb.AddForce((gravityForce - gravityNormal), ForceMode.Acceleration);
+        }
     }
     
     

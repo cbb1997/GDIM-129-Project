@@ -49,7 +49,6 @@ public class PlayerController : MonoBehaviour
     {
         // Player Look
         PlayerLook();
-        Debugger.Log(m_playerMaterial.dynamicFriction.ToString());
     }
 
     // Fixed Update for physics simulation

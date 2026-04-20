@@ -18,6 +18,7 @@ public class PlayerController : MonoBehaviour
     private float m_xOritation = 0; // Record of player look direction
     private float m_yOritation = 0;
     private Rigidbody m_rb;
+    private PhysicsMaterial m_playerMaterial;
     
     [SerializeField] private GameObject m_playerEntity;
     [SerializeField] private GameObject m_camera;
@@ -27,8 +28,9 @@ public class PlayerController : MonoBehaviour
     // Awake
     void Awake()
     {
-        // Set player rigidbody
+        // Varialbe initialization
         m_rb = this.GetComponent<Rigidbody>();
+        m_playerMaterial = m_playerEntity.GetComponent<Collider>().material;
         
         // Lock cursor
         Cursor.lockState = CursorLockMode.Locked;
@@ -47,21 +49,20 @@ public class PlayerController : MonoBehaviour
     {
         // Player Look
         PlayerLook();
+        Debugger.Log(m_playerMaterial.dynamicFriction.ToString());
     }
 
     // Fixed Update for physics simulation
     void FixedUpdate()
     {
         // Player Grounded Check
-        RaycastHit hitInfo;
-        m_isGrounded = Physics.SphereCast(transform.position, m_gcRadius, Vector3.down, out hitInfo, -m_footPos.localPosition.y);
-        m_rb.linearDamping = m_isGrounded ? m_groundDrag : m_airDrag;
+        Vector3 groundedPointNormal = GroundedCheck();
         
         // Player Move
-        PlayerMove(hitInfo.normal);
+        PlayerMove(groundedPointNormal);
         
         // Player movement adjustment
-        AntiSlide(hitInfo.normal);
+        AntiSlide(groundedPointNormal);
         VelocityControl();
     }
     
@@ -111,6 +112,20 @@ public class PlayerController : MonoBehaviour
             m_rb.AddForce(new Vector3(0f, m_jumpForce, 0f), ForceMode.VelocityChange);
             m_isGrounded = false;
         }
+    }
+
+    // Check whether the player is grounded
+    // Return grounded point's normal vector if grounded; (0, 0, 0) otherwise
+    private Vector3 GroundedCheck()
+    {
+        // Grounded Check
+        RaycastHit hitInfo;
+        m_isGrounded = Physics.SphereCast(transform.position, m_gcRadius, Vector3.down, out hitInfo, -m_footPos.localPosition.y);
+        m_rb.linearDamping = m_isGrounded ? m_groundDrag : m_airDrag;
+        m_playerMaterial.dynamicFriction = m_isGrounded ? 0.6f : 0f;
+        
+        // Return
+        return hitInfo.normal;
     }
     
     // Contorl player's horizontal velocity by a maximum speed

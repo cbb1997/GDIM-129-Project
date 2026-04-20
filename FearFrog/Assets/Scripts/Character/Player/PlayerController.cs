@@ -68,9 +68,15 @@ public class PlayerController : MonoBehaviour
         Vector3 moveDirection = new Vector3(input.x, 0, input.y);
         moveDirection = (Quaternion.Euler(0f, m_xOritation, 0f) * moveDirection).normalized;
         
-        
-        
-        
+        if (m_isGrounded)
+        {
+            float cos1 = Vector3.Dot(moveDirection, hitInfo.normal);    // Cosine of angle between new move direction and normal of surface
+            float degTheta = Mathf.Acos(cos1) * Mathf.Rad2Deg;          // Angle between new move direction and normal of surface in degrees
+            degTheta -= 90;
+            
+            moveDirection = Quaternion.AngleAxis(degTheta, Vector3.Cross(moveDirection, Vector3.up)) * moveDirection;
+            moveDirection = moveDirection.normalized;
+        }
         m_rb.AddForce(moveDirection * m_moveAcceleration, ForceMode.Acceleration);
         
         // Player Velocity Control
@@ -87,11 +93,10 @@ public class PlayerController : MonoBehaviour
         // Experiment for anti sliding on slides
         if (m_isGrounded)
         {
-            Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, Mathf.Infinity);
-            float cos = Vector3.Dot(-hit.normal, Vector3.down);
+            float cos2 = Vector3.Dot(-hitInfo.normal, Vector3.down);    // Cosine of angle between gravity force and normal force
             float gravityForceMag = m_rb.mass * Physics.gravity.y;
             Vector3 gravityForce = new Vector3(0f, -gravityForceMag, 0f);
-            Vector3 gravityNormal = (cos * gravityForceMag) * (-hit.normal);
+            Vector3 gravityNormal = (cos2 * gravityForceMag) * (-hitInfo.normal);
             // Debugger.Log((gravityForce - gravityNormal).ToString());
             m_rb.AddForce((gravityForce - gravityNormal), ForceMode.Acceleration);
         }

@@ -42,20 +42,14 @@ public class PlayerController : MonoBehaviour
         InputController.Instance.Input.Player.Jump.performed += Jump;
     }
 
-    // Update
+    // Update per frame
     void Update()
     {
         // Player Look
-        Vector2 lookDirection = InputController.Instance.Input.Player.Look.ReadValue<Vector2>();
-        m_xOritation += lookDirection.x * m_cameraSensitivity * Time.deltaTime;
-        m_yOritation += lookDirection.y * m_cameraSensitivity * Time.deltaTime;
-        m_yOritation = Math.Clamp(m_yOritation, -90f, 90f);
-        
-        m_camera.transform.rotation = Quaternion.Euler(-m_yOritation, m_xOritation, 0f);
-        m_playerEntity.transform.rotation = Quaternion.Euler(0f, m_xOritation, 0f);
+        PlayerLook();
     }
 
-    // Fixed Update
+    // Fixed Update for physics simulation
     void FixedUpdate()
     {
         // Player Grounded Check
@@ -64,22 +58,64 @@ public class PlayerController : MonoBehaviour
         m_rb.linearDamping = m_isGrounded ? m_groundDrag : m_airDrag;
         
         // Player Move
+        PlayerMove(hitInfo.normal);
+        
+        // Player movement adjustment
+        AntiSlide(hitInfo.normal);
+        VelocityControl();
+    }
+    
+
+    // Handles player's looking around
+    private void PlayerLook()
+    {
+        Vector2 lookDirection = InputController.Instance.Input.Player.Look.ReadValue<Vector2>();
+        m_xOritation += lookDirection.x * m_cameraSensitivity * Time.deltaTime;
+        m_yOritation += lookDirection.y * m_cameraSensitivity * Time.deltaTime;
+        m_yOritation = Math.Clamp(m_yOritation, -90f, 90f);
+        
+        m_camera.transform.rotation = Quaternion.Euler(-m_yOritation, m_xOritation, 0f);
+        m_playerEntity.transform.rotation = Quaternion.Euler(0f, m_xOritation, 0f);
+    }
+    
+    // Handles player's movement
+    private void PlayerMove(Vector3 groundedPointNormal)
+    {
+        // Calculate new input move direction
         Vector2 input = InputController.Instance.Input.Player.Move.ReadValue<Vector2>();
         Vector3 moveDirection = new Vector3(input.x, 0, input.y);
         moveDirection = (Quaternion.Euler(0f, m_xOritation, 0f) * moveDirection).normalized;
-        
+
+        // Modify input move direction to be parallel to the ground
+        // if player is grounded
+        float cos;
         if (m_isGrounded)
         {
-            float cos1 = Vector3.Dot(moveDirection, hitInfo.normal);    // Cosine of angle between new move direction and normal of surface
-            float degTheta = Mathf.Acos(cos1) * Mathf.Rad2Deg;          // Angle between new move direction and normal of surface in degrees
+            cos = Vector3.Dot(moveDirection, groundedPointNormal);    // Cosine of angle between new move direction and normal of surface
+            float degTheta = Mathf.Acos(cos) * Mathf.Rad2Deg;          // Angle between new move direction and normal of surface in degrees
             degTheta -= 90;
             
             moveDirection = Quaternion.AngleAxis(degTheta, Vector3.Cross(moveDirection, Vector3.up)) * moveDirection;
             moveDirection = moveDirection.normalized;
         }
-        m_rb.AddForce(moveDirection * m_moveAcceleration, ForceMode.Acceleration);
         
-        // Player Velocity Control
+        m_rb.AddForce(moveDirection * m_moveAcceleration, ForceMode.Acceleration);
+    }
+    
+    // Perfomr player jump action
+    private void Jump(InputAction.CallbackContext ctx)
+    {
+        // Perform jump is player is grounded
+        if (m_isGrounded)
+        {
+            m_rb.AddForce(new Vector3(0f, m_jumpForce, 0f), ForceMode.VelocityChange);
+            m_isGrounded = false;
+        }
+    }
+    
+    // Contorl player's horizontal velocity by a maximum speed
+    private void VelocityControl()
+    {
         Vector3 currHorVelocity = m_rb.linearVelocity;
         currHorVelocity.y = 0f;
         if (currHorVelocity.magnitude > m_maxVelocity)
@@ -89,28 +125,22 @@ public class PlayerController : MonoBehaviour
             currHorVelocity.y = m_rb.linearVelocity.y;
             m_rb.linearVelocity = currHorVelocity;
         }
-        
-        // Experiment for anti sliding on slides
+    }
+
+    // Make player anti-sliding when standing on slopes
+    private void AntiSlide(Vector3 groundedPointNormal)
+    {
+        float cos;
         if (m_isGrounded)
         {
-            float cos2 = Vector3.Dot(-hitInfo.normal, Vector3.down);    // Cosine of angle between gravity force and normal force
+            // Calculate downward force by gravity
+            // and add it back to alleviate sliding
+            cos = Vector3.Dot(-groundedPointNormal, Vector3.down);    // Cosine of angle between gravity force and normal force
             float gravityForceMag = m_rb.mass * Physics.gravity.y;
             Vector3 gravityForce = new Vector3(0f, -gravityForceMag, 0f);
-            Vector3 gravityNormal = (cos2 * gravityForceMag) * (-hitInfo.normal);
-            // Debugger.Log((gravityForce - gravityNormal).ToString());
+            Vector3 gravityNormal = (cos * gravityForceMag) * (-groundedPointNormal);
+            
             m_rb.AddForce((gravityForce - gravityNormal), ForceMode.Acceleration);
-        }
-    }
-    
-    
-    // Player Jump
-    private void Jump(InputAction.CallbackContext ctx)
-    {
-        // Perform Jump is player is grounded
-        if (m_isGrounded)
-        {
-            m_rb.AddForce(new Vector3(0f, m_jumpForce, 0f), ForceMode.VelocityChange);
-            m_isGrounded = false;
         }
     }
 }

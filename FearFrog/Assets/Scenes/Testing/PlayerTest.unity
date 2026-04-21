@@ -35123,10 +35123,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   m_moveAcceleration: 35
   m_maxVelocity: 5.5
-  m_cameraSensitivity: 100
   m_jumpForce: 5
   m_groundDrag: 5
   m_airDrag: 0
+  m_cameraSensitivity: 100
   m_playerEntity: {fileID: 1999029471}
   m_camera: {fileID: 884694491}
   m_footPos: {fileID: 1617845549}
@@ -35218,7 +35218,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraBob
   m_bobEnabled: 1
-  m_frequency: 8
+  m_frequency: 12
   m_magnitudeModifier: 0.2
   m_cameraHolder: {fileID: 884694492}
   m_camera: {fileID: 1876254579}

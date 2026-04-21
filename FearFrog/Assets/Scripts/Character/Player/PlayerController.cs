@@ -4,28 +4,37 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-    // Member variables
-    [SerializeField] private float m_moveAcceleration = 35f;
-    [SerializeField] private float m_maxVelocity = 6f;
-    [SerializeField] private float m_cameraSensitivity = 100f;
+	// Player state variable
+	private bool m_isGrounded = true;
+    private bool m_isSprinting = false;     // Player is grounded and cannot crouch
+    private bool m_isCrouching = false;     // Player is grounded and cannot sprint
+
+    // Player movement variables
+    [SerializeField] private float m_walkAcceleration = 35f;
+    [SerializeField] private float m_maxWalkVelocity = 6f;
+    [SerializeField] private float m_sprintAcceleration = 50f;
+    [SerializeField] private float m_maxSprintVelocity = 9f;
+    private float m_currMoveAcceleration;
+    private float m_currMaxVelocity;
+    
     [SerializeField] private float m_jumpForce = 5f;
     [SerializeField] private float m_groundDrag = 5f;
     [SerializeField] private float m_airDrag = 0f;
-    private float m_gcRadius = 0.35f;    // Grounndeed Check Shpere radius
-    
-    // private uint m_health = 0; // To be set later with scriptable objects
-    private bool m_isGrounded = true;
-    public bool IsGrounded { get {return m_isGrounded; } }
+    private float m_gcRadius = 0.35f;    // Grounndeed check shpere radius
+
+	[SerializeField] private float m_cameraSensitivity = 100f;
     private float m_xOritation = 0; // Record of player look direction
     private float m_yOritation = 0;
-    private Rigidbody m_rb;
-    private PhysicsMaterial m_playerMaterial;
     
+	// Reference to other components or gameObjects
     [SerializeField] private GameObject m_playerEntity;
     [SerializeField] private GameObject m_camera;
     [SerializeField] private Transform m_footPos;
+	private Rigidbody m_rb;
+    private PhysicsMaterial m_playerMaterial;
     
     // Getter
+    public bool IsGrounded { get {return m_isGrounded; } }
     public float Speed { get { return m_rb.linearVelocity.magnitude; } }
     
     
@@ -35,6 +44,8 @@ public class PlayerController : MonoBehaviour
         // Varialbe initialization
         m_rb = this.GetComponent<Rigidbody>();
         m_playerMaterial = m_playerEntity.GetComponent<Collider>().material;
+        m_currMoveAcceleration = m_walkAcceleration;
+        m_currMaxVelocity = m_maxWalkVelocity;
         
         // Lock cursor
         Cursor.lockState = CursorLockMode.Locked;
@@ -42,6 +53,7 @@ public class PlayerController : MonoBehaviour
         
         // Link Jump functionality to input system
         InputController.Instance.Input.Player.Jump.performed += Jump;
+        InputController.Instance.Input.Player.Sprint.performed += ToggleSprint;
     }
 
     // Update per frame
@@ -49,13 +61,17 @@ public class PlayerController : MonoBehaviour
     {
         // Player Look
         PlayerLook();
+
+        // Debugger.Log(m_rb.linearVelocity.magnitude.ToString());
+        Debugger.Log(m_isSprinting.ToString());
     }
 
     // Fixed Update for physics simulation
     void FixedUpdate()
     {
-        // Player Grounded Check
+        // Player state check
         Vector3 groundedPointNormal = GroundedCheck();
+        SprintCheck();
         
         // Player Move
         PlayerMove(groundedPointNormal);
@@ -86,8 +102,7 @@ public class PlayerController : MonoBehaviour
         Vector3 moveDirection = new Vector3(input.x, 0, input.y);
         moveDirection = (Quaternion.Euler(0f, m_xOritation, 0f) * moveDirection).normalized;
 
-        // Modify input move direction to be parallel to the ground
-        // if player is grounded
+        // Modify input move direction to be parallel to the ground if player is grounded
         float cos;
         if (m_isGrounded)
         {
@@ -99,7 +114,7 @@ public class PlayerController : MonoBehaviour
             moveDirection = moveDirection.normalized;
         }
         
-        m_rb.AddForce(moveDirection * m_moveAcceleration, ForceMode.Acceleration);
+        m_rb.AddForce(moveDirection * m_currMoveAcceleration, ForceMode.Acceleration);
     }
     
     // Perfomr player jump action
@@ -110,6 +125,27 @@ public class PlayerController : MonoBehaviour
         {
             m_rb.AddForce(new Vector3(0f, m_jumpForce, 0f), ForceMode.VelocityChange);
             m_isGrounded = false;
+        }
+    }
+    
+    // Toggle player sprint
+    private void ToggleSprint(InputAction.CallbackContext ctx)
+    {
+        if (m_isGrounded && m_isSprinting)      // Check to stop sprinting
+        {
+            m_isSprinting = false;
+            m_currMoveAcceleration = m_walkAcceleration;
+            m_currMaxVelocity = m_maxWalkVelocity;
+        }
+        else                                    // Check to start sprinting
+        {
+            if (m_isGrounded && !m_isCrouching)
+            {
+                m_isSprinting = true;
+                m_currMoveAcceleration = m_sprintAcceleration;
+                m_currMaxVelocity = m_maxSprintVelocity;
+
+            }
         }
     }
 
@@ -126,15 +162,27 @@ public class PlayerController : MonoBehaviour
         // Return
         return hitInfo.normal;
     }
+
+    // Exit sprint if player stops moving
+    private void SprintCheck()
+    {
+        if (m_rb.linearVelocity.magnitude < 0.0001f)
+        {
+            m_isSprinting = false;
+            m_currMoveAcceleration = m_walkAcceleration;
+            m_currMaxVelocity = m_maxWalkVelocity;
+        }
+    }
+    
     
     // Contorl player's horizontal velocity by a maximum speed
     private void VelocityControl()
     {
         Vector3 currHorVelocity = m_rb.linearVelocity;
         currHorVelocity.y = 0f;
-        if (currHorVelocity.magnitude > m_maxVelocity)
+        if (currHorVelocity.magnitude > m_currMaxVelocity)
         {
-            currHorVelocity = currHorVelocity.normalized * m_maxVelocity;
+            currHorVelocity = currHorVelocity.normalized * m_currMaxVelocity;
             // Player's fall down speed should not be affected by velocity control
             currHorVelocity.y = m_rb.linearVelocity.y;
             m_rb.linearVelocity = currHorVelocity;

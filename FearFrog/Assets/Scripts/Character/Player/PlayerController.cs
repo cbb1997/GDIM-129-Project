@@ -15,10 +15,10 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float m_maxWalkVelocity = 6f;
     [SerializeField] private float m_sprintAcceleration = 60f;
     [SerializeField] private float m_maxSprintVelocity = 9f;
-    [SerializeField] private float m_crouchAcceleration = 15f;
+    [SerializeField] private float m_crouchAcceleration = 20f;
     private float m_standCameraHeight = 0.85f;  // Controls CameraHolder Height
-    private float m_crouchCameraHeight = 0.4f;
-    private float m_crouchShrinkRatio = 0.45f;   // Scale factor for player entity when crouching
+    private float m_crouchCameraHeight = -0.1f;  // Half player height is at 0f in y-axis
+    private float m_crouchShrinkRatio = 0.5f;   // Scale factor for player entity when crouching
     private float m_currMoveAcceleration;
     private float m_currMaxVelocity;
     
@@ -199,6 +199,8 @@ public class PlayerController : MonoBehaviour
             m_currMoveAcceleration = m_crouchAcceleration;
             // Update player entity and camera
             StartCoroutine(CrounchCameraChange(new Vector3(0f, m_crouchCameraHeight, 0f)));
+            m_playerEntity.localScale = new Vector3(1f, m_crouchShrinkRatio, 1f);
+            m_playerEntity.localPosition = new Vector3(0f, m_crouchShrinkRatio - 1f, 0f);
         }
     }
 
@@ -211,6 +213,8 @@ public class PlayerController : MonoBehaviour
             m_currMoveAcceleration = m_walkAcceleration;
             // Update player entity and camera
             StartCoroutine(CrounchCameraChange(new Vector3(0f, m_standCameraHeight, 0f)));
+            m_playerEntity.localScale = new Vector3(1f, 1f, 1f);
+            m_playerEntity.localPosition = new Vector3(0f, 0f, 0f);
         }
     }
 
@@ -251,7 +255,7 @@ public class PlayerController : MonoBehaviour
     }
     
     
-    // Contorl player's horizontal velocity by a maximum speed
+    // Contorl player's horizontal velocity when in the air
     private void VelocityControl()
     {
         Vector3 currHorVelocity = m_rb.linearVelocity;

@@ -35127,7 +35127,7 @@ MonoBehaviour:
   m_maxWalkVelocity: 6
   m_sprintAcceleration: 60
   m_maxSprintVelocity: 9
-  m_crouchAcceleration: 15
+  m_crouchAcceleration: 17
   m_jumpForce: 5
   m_groundDrag: 5
   m_airDrag: 0
@@ -35222,7 +35222,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8b2202ce2038ea41a7b2c686f19ae03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraBob
-  m_bobEnabled: 0
+  m_bobEnabled: 1
   m_frequency: 12
   m_magnitudeModifier: 0.2
   m_cameraHolder: {fileID: 884694492}

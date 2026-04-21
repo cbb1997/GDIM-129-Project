@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-    // Member Variables
+    // Member variables
     [SerializeField] private float m_moveAcceleration = 35f;
     [SerializeField] private float m_maxVelocity = 6f;
     [SerializeField] private float m_cameraSensitivity = 100f;
@@ -13,8 +13,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float m_airDrag = 0f;
     private float m_gcRadius = 0.35f;    // Grounndeed Check Shpere radius
     
-    private uint m_health = 0; // To be set later with scriptable objects
+    // private uint m_health = 0; // To be set later with scriptable objects
     private bool m_isGrounded = true;
+    public bool IsGrounded { get {return m_isGrounded; } }
     private float m_xOritation = 0; // Record of player look direction
     private float m_yOritation = 0;
     private Rigidbody m_rb;
@@ -24,9 +25,12 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private GameObject m_camera;
     [SerializeField] private Transform m_footPos;
     
+    // Getter
+    public float Speed { get { return m_rb.linearVelocity.magnitude; } }
     
-    // Awake
-    void Awake()
+    
+    // Start
+    void Start()
     {
         // Varialbe initialization
         m_rb = this.GetComponent<Rigidbody>();
@@ -35,11 +39,7 @@ public class PlayerController : MonoBehaviour
         // Lock cursor
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-    }
-    
-    // Start
-    void Start()
-    {
+        
         // Link Jump functionality to input system
         InputController.Instance.Input.Player.Jump.performed += Jump;
     }

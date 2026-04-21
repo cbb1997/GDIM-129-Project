@@ -35222,9 +35222,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8b2202ce2038ea41a7b2c686f19ae03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraBob
-  m_bobEnabled: 1
-  m_frequency: 12
-  m_magnitudeModifier: 0.2
+  m_bobEnabled: 0
+  m_walkFrequency: 8
+  m_sprintFrequency: 16
+  m_crouchFrequency: 4
+  m_walkMagModifier: 0.15
+  m_sprintMagModifier: 0.6
+  m_crouchMagModifier: 0.25
   m_cameraHolder: {fileID: 884694492}
   m_camera: {fileID: 1876254579}
 --- !u!43 &1056263238

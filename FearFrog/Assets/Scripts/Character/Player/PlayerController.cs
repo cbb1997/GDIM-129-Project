@@ -40,10 +40,14 @@ public class PlayerController : MonoBehaviour
     
     // Getter
     public bool IsGrounded { get {return m_isGrounded; } }
-    public float Speed { get { return m_rb.linearVelocity.magnitude; } }
-    
-    
-    
+    public bool IsSprinting { get {return m_isSprinting; } }
+    public bool IsCrouching { get {return m_isCrouching; } }
+    public float Speed { get {
+            Vector3 horVelocity = new Vector3(m_rb.linearVelocity.x, 0f, m_rb.linearVelocity.z);
+            return horVelocity.magnitude; } }
+
+
+
     // Start
     void Start()
     {
@@ -246,11 +250,9 @@ public class PlayerController : MonoBehaviour
     // Exit sprint if player stops moving
     private void SprintCheck()
     {
-        if (m_rb.linearVelocity.magnitude < 0.0001f)
+        if (m_isSprinting && m_rb.linearVelocity.magnitude < 0.0001f)
         {
-            m_isSprinting = false;
-            m_currMoveAcceleration = m_walkAcceleration;
-            m_currMaxVelocity = m_maxWalkVelocity;
+            StopSprinting();
         }
     }
     

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -6,14 +7,18 @@ public class PlayerController : MonoBehaviour
 {
 	// Player state variable
 	private bool m_isGrounded = true;
-    private bool m_isSprinting = false;     // Player is grounded and cannot crouch
-    private bool m_isCrouching = false;     // Player is grounded and cannot sprint
+    private bool m_isSprinting = false;
+    private bool m_isCrouching = false;
 
     // Player movement variables
     [SerializeField] private float m_walkAcceleration = 35f;
     [SerializeField] private float m_maxWalkVelocity = 6f;
-    [SerializeField] private float m_sprintAcceleration = 50f;
+    [SerializeField] private float m_sprintAcceleration = 60f;
     [SerializeField] private float m_maxSprintVelocity = 9f;
+    [SerializeField] private float m_crouchAcceleration = 15f;
+    private float m_standCameraHeight = 0.85f;  // Controls CameraHolder Height
+    private float m_crouchCameraHeight = 0.4f;
+    private float m_crouchShrinkRatio = 0.45f;   // Scale factor for player entity when crouching
     private float m_currMoveAcceleration;
     private float m_currMaxVelocity;
     
@@ -27,8 +32,8 @@ public class PlayerController : MonoBehaviour
     private float m_yOritation = 0;
     
 	// Reference to other components or gameObjects
-    [SerializeField] private GameObject m_playerEntity;
-    [SerializeField] private GameObject m_camera;
+    [SerializeField] private Transform m_playerEntity;
+    [SerializeField] private Transform m_camera;
     [SerializeField] private Transform m_footPos;
 	private Rigidbody m_rb;
     private PhysicsMaterial m_playerMaterial;
@@ -38,12 +43,13 @@ public class PlayerController : MonoBehaviour
     public float Speed { get { return m_rb.linearVelocity.magnitude; } }
     
     
+    
     // Start
     void Start()
     {
         // Varialbe initialization
         m_rb = this.GetComponent<Rigidbody>();
-        m_playerMaterial = m_playerEntity.GetComponent<Collider>().material;
+        m_playerMaterial = m_playerEntity.gameObject.GetComponent<Collider>().material;
         m_currMoveAcceleration = m_walkAcceleration;
         m_currMaxVelocity = m_maxWalkVelocity;
         
@@ -54,6 +60,7 @@ public class PlayerController : MonoBehaviour
         // Link Jump functionality to input system
         InputController.Instance.Input.Player.Jump.performed += Jump;
         InputController.Instance.Input.Player.Sprint.performed += ToggleSprint;
+        InputController.Instance.Input.Player.Crouch.performed += ToggleCrouch;
     }
 
     // Update per frame
@@ -61,9 +68,6 @@ public class PlayerController : MonoBehaviour
     {
         // Player Look
         PlayerLook();
-
-        // Debugger.Log(m_rb.linearVelocity.magnitude.ToString());
-        Debugger.Log(m_isSprinting.ToString());
     }
 
     // Fixed Update for physics simulation
@@ -82,6 +86,7 @@ public class PlayerController : MonoBehaviour
     }
     
 
+    
     // Handles player's looking around
     private void PlayerLook()
     {
@@ -90,8 +95,8 @@ public class PlayerController : MonoBehaviour
         m_yOritation += lookDirection.y * m_cameraSensitivity * Time.deltaTime;
         m_yOritation = Math.Clamp(m_yOritation, -90f, 90f);
         
-        m_camera.transform.rotation = Quaternion.Euler(-m_yOritation, m_xOritation, 0f);
-        m_playerEntity.transform.rotation = Quaternion.Euler(0f, m_xOritation, 0f);
+        m_camera.rotation = Quaternion.Euler(-m_yOritation, m_xOritation, 0f);
+        m_playerEntity.rotation = Quaternion.Euler(0f, m_xOritation, 0f);
     }
     
     // Handles player's movement
@@ -123,6 +128,7 @@ public class PlayerController : MonoBehaviour
         // Perform jump is player is grounded
         if (m_isGrounded)
         {
+            StopCrouching();
             m_rb.AddForce(new Vector3(0f, m_jumpForce, 0f), ForceMode.VelocityChange);
             m_isGrounded = false;
         }
@@ -131,24 +137,94 @@ public class PlayerController : MonoBehaviour
     // Toggle player sprint
     private void ToggleSprint(InputAction.CallbackContext ctx)
     {
-        if (m_isGrounded && m_isSprinting)      // Check to stop sprinting
+        if (m_isGrounded)   // Only allow toggling when player's grounded
         {
-            m_isSprinting = false;
-            m_currMoveAcceleration = m_walkAcceleration;
-            m_currMaxVelocity = m_maxWalkVelocity;
-        }
-        else                                    // Check to start sprinting
-        {
-            if (m_isGrounded && !m_isCrouching)
+            if (m_isSprinting)      // Stop sprinting
             {
-                m_isSprinting = true;
-                m_currMoveAcceleration = m_sprintAcceleration;
-                m_currMaxVelocity = m_maxSprintVelocity;
-
+                StopSprinting();
+            }
+            else                    // Start sprinting
+            {
+                StopCrouching();
+                StartSprinting();
             }
         }
     }
 
+    // Start sprinting
+    private void StartSprinting()
+    {
+        if (!m_isSprinting)
+        {
+            m_isSprinting = true;
+            m_currMoveAcceleration = m_sprintAcceleration;
+            m_currMaxVelocity = m_maxSprintVelocity;
+        }
+    }
+
+    // Stop sprinting
+    private void StopSprinting()
+    {
+        if (m_isSprinting)
+        {
+            m_isSprinting = false;
+            m_currMoveAcceleration = m_walkAcceleration;
+            m_currMaxVelocity = m_maxWalkVelocity;   
+        }
+    }
+    
+    // Toggle player crouch
+    private void ToggleCrouch(InputAction.CallbackContext ctx)
+    {
+        if (m_isGrounded) // Only allow toggling when player's grounded
+        {
+            if (m_isCrouching)      // Stop crouching
+            {
+                StopCrouching();
+            }
+            else                    // Start crouching
+            {
+                StopSprinting();
+                StartCrouching();
+            }
+        }
+    }
+
+    // Start crouching
+    private void StartCrouching()
+    {
+        if (!m_isCrouching)
+        {
+            m_isCrouching = true;
+            m_currMoveAcceleration = m_crouchAcceleration;
+            // Update player entity and camera
+            StartCoroutine(CrounchCameraChange(new Vector3(0f, m_crouchCameraHeight, 0f)));
+        }
+    }
+
+    // Stop crouching
+    private void StopCrouching()
+    {
+        if (m_isCrouching)
+        {
+            m_isCrouching = false;
+            m_currMoveAcceleration = m_walkAcceleration;
+            // Update player entity and camera
+            StartCoroutine(CrounchCameraChange(new Vector3(0f, m_standCameraHeight, 0f)));
+        }
+    }
+
+    private IEnumerator CrounchCameraChange(Vector3 targetPos)
+    {
+        while (Vector3.Distance(m_camera.localPosition, targetPos) >= 0.001f)
+        {
+            m_camera.localPosition = Vector3.Lerp(m_camera.localPosition, targetPos, 0.15f);
+            yield return null;
+        }
+    }
+    
+    
+    
     // Check whether the player is grounded
     // Return grounded point's normal vector if grounded; (0, 0, 0) otherwise
     private Vector3 GroundedCheck()

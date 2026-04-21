@@ -152,6 +152,8 @@ Transform:
   - {fileID: 1744456872}
   - {fileID: 383270520}
   - {fileID: 682979472}
+  - {fileID: 890608654}
+  - {fileID: 6192732000155730322}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &383270519
@@ -34726,7 +34728,7 @@ Transform:
   m_GameObject: {fileID: 884694491}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.75, z: 0}
+  m_LocalPosition: {x: 0, y: 0.85, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -35087,7 +35089,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 82248487}
   m_LocalEulerAnglesHint: {x: 17.255, y: 10.954, z: 29.739}
 --- !u!1 &902132959
 GameObject:
@@ -35121,14 +35123,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 692e5c2d8e6ae6a4886fbc00bb7c3302, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  m_moveAcceleration: 35
-  m_maxVelocity: 5.5
+  m_walkAcceleration: 35
+  m_maxWalkVelocity: 6
+  m_sprintAcceleration: 60
+  m_maxSprintVelocity: 9
+  m_crouchAcceleration: 15
   m_jumpForce: 5
   m_groundDrag: 5
   m_airDrag: 0
   m_cameraSensitivity: 100
-  m_playerEntity: {fileID: 1999029471}
-  m_camera: {fileID: 884694491}
+  m_playerEntity: {fileID: 1999029475}
+  m_camera: {fileID: 884694492}
   m_footPos: {fileID: 1617845549}
 --- !u!114 &902132961
 MonoBehaviour:
@@ -35217,7 +35222,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8b2202ce2038ea41a7b2c686f19ae03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraBob
-  m_bobEnabled: 1
+  m_bobEnabled: 0
   m_frequency: 12
   m_magnitudeModifier: 0.2
   m_cameraHolder: {fileID: 884694492}
@@ -36649,15 +36654,15 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6825997283231423272}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.28280228, z: -0, w: 0.9591782}
-  m_LocalPosition: {x: 8.31, y: 6.5, z: 7.87}
-  m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
+  m_LocalRotation: {x: -0, y: -0.28280228, z: 0.00000001862645, w: 0.95917827}
+  m_LocalPosition: {x: 8.31, y: 6.5, z: 7.8700004}
+  m_LocalScale: {x: 0.30000007, y: 0.3, z: 0.30000007}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3569363513853148720}
   - {fileID: 7025798365472824055}
   - {fileID: 3148382810776576455}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 82248487}
   m_LocalEulerAnglesHint: {x: 0, y: -32.855, z: 0}
 --- !u!1 &6482889886071608349
 GameObject:
@@ -36786,5 +36791,3 @@ SceneRoots:
   - {fileID: 82248487}
   - {fileID: 2145359150}
   - {fileID: 902132962}
-  - {fileID: 6192732000155730322}
-  - {fileID: 890608654}

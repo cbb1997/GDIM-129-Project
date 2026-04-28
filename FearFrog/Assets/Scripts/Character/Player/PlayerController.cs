@@ -66,7 +66,7 @@ public class PlayerController : MonoBehaviour
 
         Vector3 currHorVelocity = m_rb.linearVelocity;
         currHorVelocity.y = 0f;
-        Debug.Log(currHorVelocity.magnitude);
+        //Debug.Log(currHorVelocity.magnitude);
     }
 
     // LateUpdate

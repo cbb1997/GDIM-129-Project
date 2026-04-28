@@ -20,9 +20,9 @@ public class UiManagerTest : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.R)) reticle.SetActive(true);
+        if (Input.GetKeyDown(KeyCode.R)) ToggleReticle();
         if (Input.GetKeyDown(KeyCode.Q)) ToggleInvenotryUI();
-        if (Input.GetKeyDown(KeyCode.W)) ToggleStatusUI();
+        if (Input.GetKeyDown(KeyCode.F)) ToggleStatusUI();
 
         if(Input.GetKeyDown(KeyCode.E)) nearDeath = !nearDeath;
 

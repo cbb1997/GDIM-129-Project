@@ -7,8 +7,8 @@ using UnityEngine.UIElements;
 public class UiManagerTest : MonoBehaviour
 {
     [Header("UI")]
-    public UnityEngine.UI.Image bloodiedScreen;
-    public UnityEngine.UI.Image reticle;
+    public GameObject bloodiedScreen;
+    public GameObject reticle;
     public CanvasGroup playerStatus;
     public CanvasGroup[] inventoryUI;
 
@@ -16,37 +16,41 @@ public class UiManagerTest : MonoBehaviour
     private bool inventoryVisible;
 
     private bool nearDeath;
+    private bool reticleEnabled;
 
     private void Update()
     {
-        if(Input.GetKeyDown(KeyCode.R)) reticle.enabled = true;
+        if (Input.GetKeyDown(KeyCode.R)) reticle.SetActive(true);
         if (Input.GetKeyDown(KeyCode.Q)) ToggleInvenotryUI();
         if (Input.GetKeyDown(KeyCode.W)) ToggleStatusUI();
 
-        if(nearDeath == true)
-        {
-            bloodiedScreen.enabled = false;
-        }
+        if(Input.GetKeyDown(KeyCode.E)) nearDeath = !nearDeath;
+
+        if (nearDeath == true) bloodiedScreen.SetActive(true);
+        else bloodiedScreen.SetActive(false);
     }
 
+
+    // hides or shows reticle
+    private void ToggleReticle()
+    {
+        reticleEnabled = !reticleEnabled;
+        if(reticleEnabled == true) reticle.SetActive(true);
+        else reticle.SetActive(false);
+    }
 
     // hides or shows health and stamina bars
     private void ToggleStatusUI()
     {
-        if (statusVisible == true)
-        {
-            playerStatus.alpha = 0f;
-        }
-        else
-        {
-            playerStatus.alpha = 1f;
-        }
-
+        statusVisible = !statusVisible;
+        if (statusVisible == true) playerStatus.alpha = 0f;
+        else playerStatus.alpha = 1f;
     }
 
     //toggle inventory ui (interactability not set up)
     private void ToggleInvenotryUI()
     {
+        inventoryVisible = !inventoryVisible;
         foreach (CanvasGroup canGroup in inventoryUI)
         {
             if(inventoryVisible == true)
